@@ -9,7 +9,7 @@
     </tr>
     {{range .Kodes}}
     <tr>
-        <td><a href='/kode/view?id={{.ID}}'>{{.Title}}</a></td>
+        <td><a href='/kode/view/{{.ID}}'>{{.Title}}</a></td>
         <td>{{.Created |  humanDate}}</td>
         <td>#{{.ID}}</td>
     </tr>
