@@ -4,11 +4,13 @@ import (
 	"html/template"
 	"kodesbox.snnafi.dev/internal/models"
 	"path/filepath"
+	"time"
 )
 
 type templateData struct {
-	Kode  *models.Kode
-	Kodes []*models.Kode
+	CurrentYear int
+	Kode        *models.Kode
+	Kodes       []*models.Kode
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {
@@ -22,13 +24,17 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	for _, page := range pages {
 		name := filepath.Base(page)
 
-		files := []string{
-			"./ui/html/base.html",
-			"./ui/html/partials/nav.html",
-			page,
+		ts, err := template.New(name).Funcs(funcs).ParseFiles("./ui/html/base.html")
+		if err != nil {
+			return nil, err
 		}
 
-		ts, err := template.ParseFiles(files...)
+		ts, err = ts.ParseGlob("./ui/html/partials/*.html")
+		if err != nil {
+			return nil, err
+		}
+
+		ts, err = ts.ParseFiles(page)
 		if err != nil {
 			return nil, err
 		}
@@ -37,4 +43,12 @@ func newTemplateCache() (map[string]*template.Template, error) {
 	}
 
 	return cache, nil
+}
+
+func humanDate(t time.Time) string {
+	return t.Format("02 Jan 2006 at 15:04")
+}
+
+var funcs = template.FuncMap{
+	"humanDate": humanDate,
 }

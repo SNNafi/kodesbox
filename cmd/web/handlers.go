@@ -3,7 +3,6 @@ package main
 import (
 	"errors"
 	"fmt"
-	"html/template"
 	"kodesbox.snnafi.dev/internal/models"
 	"net/http"
 	"strconv"
@@ -27,26 +26,10 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := templateData{
-		Kodes: kodes,
-	}
+	data := app.newTemplateData(r)
+	data.Kodes = kodes
 
-	files := []string{
-		"./ui/html/base.html",
-		"./ui/html/partials/nav.html",
-		"./ui/html/pages/home.html",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	err = ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, err)
-	}
+	app.render(w, http.StatusOK, "home.html", data)
 
 }
 
@@ -69,27 +52,10 @@ func (app *application) kodeView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	data := templateData{
-		Kode: kode,
-	}
+	data := app.newTemplateData(r)
+	data.Kode = kode
 
-	files := []string{
-		"./ui/html/base.html",
-		"./ui/html/partials/nav.html",
-		"./ui/html/pages/view.html",
-	}
-
-	ts, err := template.ParseFiles(files...)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	err = ts.ExecuteTemplate(w, "base", data)
-	if err != nil {
-		app.serverError(w, err)
-
-	}
+	app.render(w, http.StatusOK, "view.html", data)
 
 }
 
