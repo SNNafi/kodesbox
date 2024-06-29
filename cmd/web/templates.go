@@ -12,6 +12,7 @@ type templateData struct {
 	Kode        *models.Kode
 	Kodes       []*models.Kode
 	Form        any
+	Flash       string
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

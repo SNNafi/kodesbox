@@ -108,5 +108,7 @@ func (app *application) kodeCreatePost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	app.sessionManager.Put(r.Context(), "flash", "Kode successfully created!")
+
 	http.Redirect(w, r, fmt.Sprintf("/kode/view/%d", id), http.StatusSeeOther)
 }
