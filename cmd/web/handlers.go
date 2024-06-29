@@ -1,8 +1,10 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"html/template"
+	"kodesbox.snnafi.dev/internal/models"
 	"net/http"
 	"strconv"
 )
@@ -38,12 +40,22 @@ func (app *application) kodeView(w http.ResponseWriter, r *http.Request) {
 
 	id, err := strconv.Atoi(r.URL.Query().Get("id"))
 	if err != nil || id < 1 {
-		app.errorLog.Println(err)
 		app.notFound(w)
 		return
 	}
 
-	fmt.Fprintf(w, "Display a specific kode with id %d", id)
+	kode, err := app.box.Get(id)
+
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+
+	fmt.Fprintf(w, "%+v", kode)
 }
 
 func (app *application) kodeCreate(w http.ResponseWriter, r *http.Request) {
@@ -55,5 +67,15 @@ func (app *application) kodeCreate(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Write([]byte("Create a kode"))
+	title := "O snail"
+	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
+	expires := 7
+
+	id, err := app.box.Insert(title, content, expires)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/kode/view?id=%d", id), http.StatusSeeOther)
 }
