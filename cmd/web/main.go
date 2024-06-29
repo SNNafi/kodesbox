@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"flag"
 	_ "github.com/go-sql-driver/mysql"
+	"html/template"
 	"kodesbox.snnafi.dev/internal/models"
 	"log"
 	"net/http"
@@ -11,9 +12,10 @@ import (
 )
 
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	box      *models.KodesBox
+	errorLog      *log.Logger
+	infoLog       *log.Logger
+	box           *models.KodesBox
+	templateCache map[string]*template.Template
 }
 
 func main() {
@@ -27,6 +29,11 @@ func main() {
 	infoLog := log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime)
 	errorLog := log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.Lshortfile)
 
+	templateCache, err := newTemplateCache()
+	if err != nil {
+		errorLog.Fatal(err)
+	}
+
 	db, err := openDB(*dsn)
 	if err != nil {
 		errorLog.Fatal(err)
@@ -35,9 +42,10 @@ func main() {
 	defer db.Close()
 
 	app := application{
-		errorLog: errorLog,
-		infoLog:  infoLog,
-		box:      &models.KodesBox{DB: db},
+		errorLog:      errorLog,
+		infoLog:       infoLog,
+		box:           &models.KodesBox{DB: db},
+		templateCache: templateCache,
 	}
 
 	mux := app.routes()

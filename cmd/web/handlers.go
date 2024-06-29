@@ -16,6 +16,21 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	kodes, err := app.box.Latest()
+
+	if err != nil {
+		if errors.Is(err, models.ErrNoRecord) {
+			app.notFound(w)
+			return
+		}
+		app.serverError(w, err)
+		return
+	}
+
+	data := templateData{
+		Kodes: kodes,
+	}
+
 	files := []string{
 		"./ui/html/base.html",
 		"./ui/html/partials/nav.html",
@@ -28,10 +43,9 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = ts.ExecuteTemplate(w, "base", nil)
+	err = ts.ExecuteTemplate(w, "base", data)
 	if err != nil {
 		app.serverError(w, err)
-		return
 	}
 
 }
@@ -55,7 +69,28 @@ func (app *application) kodeView(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fmt.Fprintf(w, "%+v", kode)
+	data := templateData{
+		Kode: kode,
+	}
+
+	files := []string{
+		"./ui/html/base.html",
+		"./ui/html/partials/nav.html",
+		"./ui/html/pages/view.html",
+	}
+
+	ts, err := template.ParseFiles(files...)
+	if err != nil {
+		app.serverError(w, err)
+		return
+	}
+
+	err = ts.ExecuteTemplate(w, "base", data)
+	if err != nil {
+		app.serverError(w, err)
+
+	}
+
 }
 
 func (app *application) kodeCreate(w http.ResponseWriter, r *http.Request) {

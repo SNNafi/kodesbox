@@ -50,7 +50,6 @@ func (box *KodesBox) Get(id int) (*Kode, error) {
 		if errors.Is(err, sql.ErrNoRows) {
 			return nil, ErrNoRecord
 		}
-
 		return nil, err
 	}
 
@@ -58,5 +57,36 @@ func (box *KodesBox) Get(id int) (*Kode, error) {
 }
 
 func (box *KodesBox) Latest() ([]*Kode, error) {
-	return nil, nil
+
+	stmt := `SELECT id, title, content, created, expires FROM kodes
+    WHERE expires > UTC_TIMESTAMP() ORDER BY id DESC LIMIT 10`
+
+	rows, err := box.DB.Query(stmt)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	kodes := []*Kode{}
+
+	for rows.Next() {
+		kode := &Kode{}
+
+		err = rows.Scan(&kode.ID, &kode.Title, &kode.Content, &kode.Created, &kode.Expired)
+		if err != nil {
+			return nil, err
+		}
+
+		kodes = append(kodes, kode)
+	}
+
+	if err = rows.Err(); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, ErrNoRecord
+		}
+		return nil, err
+	}
+
+	return kodes, nil
 }
