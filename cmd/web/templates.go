@@ -11,6 +11,7 @@ type templateData struct {
 	CurrentYear int
 	Kode        *models.Kode
 	Kodes       []*models.Kode
+	Form        any
 }
 
 func newTemplateCache() (map[string]*template.Template, error) {

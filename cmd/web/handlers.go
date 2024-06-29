@@ -5,9 +5,17 @@ import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
 	"kodesbox.snnafi.dev/internal/models"
+	"kodesbox.snnafi.dev/internal/validator"
 	"net/http"
 	"strconv"
 )
+
+type snippetCreateForm struct {
+	Title               string `form:"title"`
+	Content             string `form:"content"`
+	Expires             int    `form:"expires"`
+	validator.Validator `form:"-"`
+}
 
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
@@ -59,40 +67,42 @@ func (app *application) kodeView(w http.ResponseWriter, r *http.Request) {
 
 func (app *application) kodeCreate(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		app.clientError(w, http.StatusMethodNotAllowed)
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
-		return
-	}
+	data := app.newTemplateData(r)
 
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
+	data.Form = snippetCreateForm{Expires: 365}
 
-	id, err := app.box.Insert(title, content, expires)
-	if err != nil {
-		app.serverError(w, err)
-		return
-	}
-
-	http.Redirect(w, r, fmt.Sprintf("/kode/view?id=%d", id), http.StatusSeeOther)
+	app.render(w, http.StatusOK, "create.html", data)
 }
 
 func (app *application) kodeCreatePost(w http.ResponseWriter, r *http.Request) {
 
-	if r.Method != http.MethodPost {
-		w.Header().Set("Allow", http.MethodPost)
-		app.clientError(w, http.StatusMethodNotAllowed)
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+	err := r.ParseForm()
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
 		return
 	}
 
-	title := "O snail"
-	content := "O snail\nClimb Mount Fuji,\nBut slowly, slowly!\n\n– Kobayashi Issa"
-	expires := 7
+	var form snippetCreateForm
 
-	id, err := app.box.Insert(title, content, expires)
+	err = app.decodePostForm(r, &form)
+	if err != nil {
+		app.clientError(w, http.StatusBadRequest)
+		return
+	}
+
+	form.CheckField(validator.NotBlank(form.Title), "title", "This field cannot be blank")
+	form.CheckField(validator.MaxChars(form.Title, 100), "title", "This field cannot be more than 100 characters long")
+	form.CheckField(validator.NotBlank(form.Content), "content", "This field cannot be blank")
+	form.CheckField(validator.PermittedInt(form.Expires, 1, 7, 365), "expires", "This field must equal 1, 7 or 365")
+
+	if !form.Valid() {
+		data := app.newTemplateData(r)
+		data.Form = form
+		app.render(w, http.StatusUnprocessableEntity, "create.html", data)
+		return
+	}
+
+	id, err := app.box.Insert(form.Title, form.Content, form.Expires)
 	if err != nil {
 		app.serverError(w, err)
 		return

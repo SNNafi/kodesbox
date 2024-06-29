@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"flag"
+	"github.com/go-playground/form/v4"
 	_ "github.com/go-sql-driver/mysql"
 	"html/template"
 	"kodesbox.snnafi.dev/internal/models"
@@ -16,6 +17,7 @@ type application struct {
 	infoLog       *log.Logger
 	box           *models.KodesBox
 	templateCache map[string]*template.Template
+	formDecoder   *form.Decoder
 }
 
 func main() {
@@ -41,11 +43,14 @@ func main() {
 
 	defer db.Close()
 
+	formDecoder := form.NewDecoder()
+
 	app := application{
 		errorLog:      errorLog,
 		infoLog:       infoLog,
 		box:           &models.KodesBox{DB: db},
 		templateCache: templateCache,
+		formDecoder:   formDecoder,
 	}
 
 	handler := app.routes()
