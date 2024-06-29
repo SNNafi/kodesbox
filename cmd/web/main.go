@@ -48,11 +48,11 @@ func main() {
 		templateCache: templateCache,
 	}
 
-	mux := app.routes()
+	handler := app.routes()
 
 	srv := &http.Server{
 		Addr:     *addr,
-		Handler:  mux,
+		Handler:  handler,
 		ErrorLog: app.errorLog,
 	}
 
