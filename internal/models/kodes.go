@@ -6,6 +6,12 @@ import (
 	"time"
 )
 
+type KodesBoxInterface interface {
+	Insert(title string, content string, expires int) (int, error)
+	Get(id int) (*Kode, error)
+	Latest() ([]*Kode, error)
+}
+
 type Kode struct {
 	ID      int
 	Title   string
