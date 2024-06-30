@@ -30,6 +30,10 @@ type userLoginForm struct {
 	validator.Validator `form:"-"`
 }
 
+func ping(w http.ResponseWriter, _ *http.Request) {
+	w.Write([]byte("ok"))
+}
+
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
 
 	kodes, err := app.box.Latest()
