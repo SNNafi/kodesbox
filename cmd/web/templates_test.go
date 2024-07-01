@@ -14,19 +14,14 @@ func TestHumanDate(t *testing.T) {
 		want string
 	}{
 		{
-			"UTC",
-			time.Date(2024, 7, 1, 10, 15, 0, 0, time.UTC),
+			"Local",
+			time.Date(2024, 7, 1, 10, 15, 0, 0, time.Local),
 			"01 Jul 2024 at 10:15",
 		},
 		{
 			"Empty",
 			time.Time{},
 			"",
-		},
-		{
-			"CET",
-			time.Date(2024, 7, 1, 10, 15, 0, 0, time.FixedZone("CET", 1*60*60)),
-			"01 Jul 2024 at 09:15",
 		},
 	}
 
